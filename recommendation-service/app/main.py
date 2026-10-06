@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routes import recommendations
+from app.routes import recommendation
 
 
 app = FastAPI(
@@ -8,7 +8,7 @@ app = FastAPI(
 
 
 app.include_router(
-    recommendations.router
+    recommendation.router
 )
 
 

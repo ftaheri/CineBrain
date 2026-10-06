@@ -1,6 +1,14 @@
+import os
+
 from qdrant_client import QdrantClient
 
+
+QDRANT_HOST = os.getenv("QDRANT_HOST", "localhost")
+QDRANT_PORT = int(os.getenv("QDRANT_PORT", "6333"))
+
 client = QdrantClient(
-    host="localhost",
-    port=6333
+    host=QDRANT_HOST,
+    port=QDRANT_PORT
 )
+
+COLLECTION_NAME = "movies"

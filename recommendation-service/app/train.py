@@ -1,25 +1,13 @@
-import pandas as pd
 import pickle
+import pandas as pd
 
-from app.recommender import MovieRecommender
-
-
-ratings = pd.read_csv(
-    "data/ratings.csv"
-)
+from app.collaborative_recommender import CollaborativeRecommender
 
 
-model = MovieRecommender()
+RATINGS_PATH = "data/ratings.csv"
 
-model.train(
-    ratings
-)
+ratings = pd.read_csv(RATINGS_PATH)
 
+recommender = CollaborativeRecommender()
 
-pickle.dump(
-    model,
-    open(
-        "models/recommender.pkl",
-        "wb"
-    )
-)
+recommender.train(ratings)

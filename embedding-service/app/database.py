@@ -1,8 +1,14 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker
+import os
+from dotenv import load_dotenv
 
-DATABASE_URL = (
+load_dotenv()
+
+database_url = os.getenv("DATABASE_URL")
+
+DATABASE_URL = database_url if database_url else (
     "postgresql://movie_user:password@localhost:5432/movies"
 )
 

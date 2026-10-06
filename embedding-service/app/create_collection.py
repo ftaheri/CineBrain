@@ -1,12 +1,34 @@
-from qdrant_client.models import Distance
-from qdrant_client.models import VectorParams
+from qdrant_client.models import Distance, VectorParams
 
-from app.qdrant_client import client
+from app.qdrant_client import client, COLLECTION_NAME
 
-client.recreate_collection(
-    collection_name="movies",
-    vectors_config=VectorParams(
-        size=384,
-        distance=Distance.COSINE
+
+def create_collection_if_not_exists():
+    collections = client.get_collections().collections
+
+    collection_names = [
+        collection.name
+        for collection in collections
+    ]
+
+    if COLLECTION_NAME in collection_names:
+        print(
+            f"Collection '{COLLECTION_NAME}' already exists."
+        )
+        return
+
+    client.create_collection(
+        collection_name=COLLECTION_NAME,
+        vectors_config=VectorParams(
+            size=384,
+            distance=Distance.COSINE
+        )
     )
-)
+
+    print(
+        f"Created collection '{COLLECTION_NAME}'."
+    )
+
+
+if __name__ == "__main__":
+    create_collection_if_not_exists()
