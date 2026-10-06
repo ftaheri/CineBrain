@@ -1,0 +1,120 @@
+services:
+
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: cinebrain-qdrant
+
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+
+    volumes:
+      - qdrant_data:/qdrant/storage
+
+    healthcheck:
+      test: ["CMD", "/bin/bash", "-c", "echo > /dev/tcp/127.0.0.1/6333"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+    networks:
+      - cinebrain
+
+
+  embedding-service:
+    build:
+      context: ./embedding-service
+    container_name: cinebrain-embedding-service
+
+    ports:
+      - "8001:8001"
+
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+      QDRANT_HOST: qdrant
+      QDRANT_PORT: 6333
+
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+    depends_on:
+      qdrant:
+        condition: service_healthy
+
+    networks:
+      - cinebrain
+
+
+  movie-service:
+    build:
+      context: ./movie-service
+
+    container_name: cinebrain-movie-service
+
+    ports:
+      - "8000:8000"
+
+    environment:
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    
+    networks:
+      - cinebrain
+
+
+  recommendation-service:
+    build:
+      context: ./recommendation-service
+
+    container_name: cinebrain-recommendation-service
+
+    ports:
+      - "8002:8002"
+
+    environment:
+      MOVIE_SERVICE_URL: ${MOVIE_SERVICE_URL}
+      QDRANT_HOST: qdrant
+      QDRANT_PORT: 6333
+
+    depends_on:
+      - movie-service
+      - qdrant
+
+    networks:
+      - cinebrain
+
+
+  ranker-service:
+    build:
+      context: ./ranker-service
+
+    container_name: cinebrain-ranker-service
+
+    ports:
+      - "8003:8003"
+
+    environment:
+      RECOMMENDATION_SERVICE_URL: ${RECOMMENDATION_SERVICE_URL}
+
+    depends_on:
+      - recommendation-service
+
+    networks:
+      - cinebrain
+
+
+networks:
+
+  cinebrain:
+    driver: bridge
+
+
+volumes:
+
+  qdrant_data:

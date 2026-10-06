@@ -21,15 +21,12 @@ def embed(body: dict):
 def semantic_search(query: str):
 
     vector = embedder.embed(query)
-
-    hits = client.search(
-
+    
+    hits = client.query_points(
         collection_name="movies",
-
-        query_vector=vector,
-
-        limit=5
-
-    )
+        query=vector,
+        limit=5,
+        with_payload=True
+    ).points
 
     return hits

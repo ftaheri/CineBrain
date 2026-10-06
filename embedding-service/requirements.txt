@@ -6,3 +6,5 @@ torch
 sqlalchemy
 psycopg2-binary
 sentence-transformers
+python-dotenv
+psycopg[binary]

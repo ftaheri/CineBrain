@@ -4,16 +4,22 @@ from app.database import SessionLocal
 from app.models import Movie
 from app.embedder import Embedder
 from app.qdrant_client import client
+from app.create_collection import create_collection_if_not_exists
 
-BATCH_SIZE = 500
+create_collection_if_not_exists()
+
+BATCH_SIZE = 1000
 
 db = SessionLocal()
 embedder = Embedder()
 movies = db.query(Movie).all()
 points = []
+iteration = 1
+
+
+print(f"Found {len(movies)} movies to embed.")
 
 for movie in movies:
-
     text = (
         movie.title
         + " "
@@ -32,16 +38,16 @@ for movie in movies:
         )
     )
 
-for i in range(0, len(points), BATCH_SIZE):
-    batch = points[i:i + BATCH_SIZE]
+    if iteration % BATCH_SIZE == 0 or iteration == len(movies):
+        print(f"Uploading batch {iteration // BATCH_SIZE}...")
+        client.upsert(
+            collection_name="movies",
+            points=points
+        )
+        print(f"Uploaded batch {iteration // BATCH_SIZE}.")
+        points = []
 
-    client.upsert(
-        collection_name="movies",
-        points=batch
-    )
-
-    print(
-        f"Uploaded {i + len(batch)} / {len(points)}"
-    )
+    iteration += 1
+    
 
 print("Finished.")
